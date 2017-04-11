@@ -2,8 +2,8 @@
 
 This project addresses, what I consider, a major shortcomming of T4 templates.   T4 templates are great, but they have the following issues:
 	
-	1. A notoriously hard debug
-	2. No Intellisense supprt
+	1. T4 templates are notoriously hard to debug
+	2. No Intellisense support
  	3. The template representation looks quite different from what is generated
 	4. The meta-data for edmx is difficult to work with (relationships are in a completely different location than entity,  finding keys is cumbersome)
 	5. T4 POCO code generation cannot handle many to many relationships or tables with 2 or more foriegn keys to one table 
