@@ -9,6 +9,10 @@ using System.Xml.Linq;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
+using System.Security.Policy;
+using System.Security;
+using System.Web.Razor;
+using RazorEngine;
 
 namespace RzDb.CodeGen
 {
@@ -53,9 +57,9 @@ namespace RzDb.CodeGen
                     TemplateServiceConfiguration config = new TemplateServiceConfiguration();
                     config.EncodedStringFactory = new RawStringFactory(); // Raw string encoding.
                     config.Debug = true;
-
                     IRazorEngineService service = RazorEngineService.Create(config);
-                    result = service.RunCompile(new LoadedTemplateSource(File.ReadAllText(FullTemplatePath), FullTemplatePath), "RzDbCodeGen", typeof(SchemaData), schema);
+                    Engine.Razor = service;
+                    result = Engine.Razor.RunCompile(new LoadedTemplateSource(File.ReadAllText(FullTemplatePath), FullTemplatePath), "RzDbCodeGen", typeof(SchemaData), schema);
                 }
                 catch (Exception exRazerEngine)
                 {
@@ -76,6 +80,7 @@ namespace RzDb.CodeGen
                         }
                     }
                 }
+
                 result = result.Replace("<t>", "")
                     .Replace("<t/>", "")
                     .Replace("<t />", "")
@@ -281,6 +286,31 @@ namespace RzDb.CodeGen
             }
         }
 
+        public static AppDomain SandboxCreator()
+        {
+            Evidence ev = new Evidence();
+            ev.AddHostEvidence(new Zone(SecurityZone.Internet));
+            PermissionSet permSet = SecurityManager.GetStandardSandbox(ev);
+            // We have to load ourself with full trust
+            StrongName razorEngineAssembly = typeof(RazorEngineService).Assembly.Evidence.GetHostEvidence<StrongName>();
+            
+            // We have to load Razor with full trust (so all methods are SecurityCritical)
+            // This is because we apply AllowPartiallyTrustedCallers to RazorEngine, because
+            // We need the untrusted (transparent) code to be able to inherit TemplateBase.
+            // Because in the normal environment/appdomain we run as full trust and the Razor assembly has no security attributes
+            // it will be completely SecurityCritical. 
+            // This means we have to mark a lot of our members SecurityCritical (which is fine).
+            // However in the sandbox domain we have partial trust and because razor has no Security attributes that means the
+            // code will be transparent (this is where we get a lot of exceptions, because we now have different security attributes)
+            // To work around this we give Razor full trust in the sandbox as well.
+            StrongName razorAssembly = typeof(RazorTemplateEngine).Assembly.Evidence.GetHostEvidence<StrongName>();
+            
+            AppDomainSetup adSetup = new AppDomainSetup();
+            
+            adSetup.ApplicationBase = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+            AppDomain newDomain = AppDomain.CreateDomain("Sandbox", null, adSetup, permSet, razorEngineAssembly, razorAssembly);
+            return newDomain;
+        }
 
     }
     public class RazorEngineTemplate<T> : TemplateBase<T>

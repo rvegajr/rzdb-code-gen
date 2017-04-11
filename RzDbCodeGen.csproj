@@ -7,7 +7,7 @@
     <ProjectGuid>{0BFED356-882D-4069-A421-990668509F58}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>RzDb.CodeGen</RootNamespace>
-    <AssemblyName>RzDbCodeGen</AssemblyName>
+    <AssemblyName>RzDb.CodeGen</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,6 +38,12 @@
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Faker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Faker.1.2\lib\Faker.dll</HintPath>
@@ -62,12 +69,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\CodeGen.Base.cs" />
+    <Compile Include="CodeGen.Base.cs" />
     <Compile Include="Console.cs" />
     <Compile Include="EdmxGen.Demo\EdmxGenDemoGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Classes\SchemaObjects.cs" />
-    <Compile Include="Classes\StringExtentions.cs" />
+    <Compile Include="SchemaObjects.cs" />
+    <Compile Include="StringExtentions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\RzDb.CodeGenerations.txt">
@@ -79,9 +86,9 @@
     <Content Include="Resources\AW.edmx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="EdmxGen.Demo\EdmxGenDemoTemplate.cshtml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="EdmxGen.Demo\EdmxGenDemoTemplate.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="LICENSE" />
     <None Include="packages.config" />
     <None Include="README.md" />
@@ -95,6 +102,8 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Classes\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
