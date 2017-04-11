@@ -99,7 +99,7 @@ To (which will dump sql data type, .net data type and max length) ->
 
 ## Adding this to the build process
 
-The app contains a t4 template that is designed to load the assembly and execute the code generation.  This .tt template will be added to the same path as the data generation path,  so whenever the edmx file is generated,  it should kick off the code generation project. 
+The app contains a t4 template that is designed to load the assembly and execute the code generation.  This .tt template will be added to the same path as the data generation path,  so whenever the edmx file is generated,  it should kick off the code generation project. Note that you will need to set the Project Type to "Class Library" instead of console app when you include it in your host project.
 
 ## Built With
 
