@@ -69,12 +69,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeGen.Base.cs" />
+    <Compile Include="Classes\CodeGen.Base.cs" />
     <Compile Include="Console.cs" />
     <Compile Include="EdmxGen.Demo\EdmxGenDemoGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SchemaObjects.cs" />
-    <Compile Include="StringExtentions.cs" />
+    <Compile Include="Classes\SchemaObjects.cs" />
+    <Compile Include="Classes\StringExtentions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\RzDb.CodeGenerations.txt">
@@ -102,8 +102,6 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Classes\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

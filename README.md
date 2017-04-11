@@ -36,7 +36,70 @@ It also uses the standard "@" and "{}" razor syntax to interpest code control st
 
 ## How to create your own template
 
-Add additional notes about how to deploy this on a live system
+Lets create a template!
+* In the solution explorer, select the project 'RzDbCodeGen' and create a folder off the project root called "EdmxGen.PropertyDump"
+* Create a new class in this newly created folder and call it "EdmxGen.PropertyDumpGenerator.cs",  paste the following code 
+```
+using RzDb.CodeGen;
+public class EdmxGenPropertyDumpGenerator : EdmxCodeGenBase
+{
+    public EdmxGenPropertyDumpGenerator(string edmxPath, string outputPath) : base(edmxPath, @"EdmxGen.PropertyDump\EdmxGen.PropertyDumpTemplate.cshtml", outputPath)
+    {
+
+    }
+}
+```
+* Create another new class in this newly created folder and call it "EdmxGen.PropertyDumpTemplate.cshtml",  paste the following code 
+```
+@using System.Collections.Generic
+@using RzDb.CodeGen
+@{ SchemaData _Model = (SchemaData)Model; }
+@foreach (string key in _Model.Entities.Keys)
+
+{<t>##FILE=$OUTPUT_PATH$Entity_@key<t/>.cs
+Key is @key @foreach (KeyValuePair<string, Property> item in _Model[key].Properties)
+{
+    <t>
+        -PropertyName: @item.Value.Name  @(item.Value.IsKey ? "Is Key!!" : "")
+        @foreach (Relationship relate in item.Value.RelatedTo)
+        {
+            <t>-   Relation:  @relate.FromFieldName  to @relate.ToTableName<t />.@relate.ToFieldName as @relate.Type</t>
+        }
+    </t>}
+</t>}
+```
+* VS2015 ONLY - set a breakpoint in line 4 in EdmxGen.PropertyDumpTemplate.cshtml  (skip all breakpoint steps if you are using VS2017)
+* Go To <App Root>Console.cs,  edit line 16 and comment it out
+```
+            // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
+
+            new EdmxGenDemoGenerator(edmxFile, outputPath).ProcessTemplate();
+
+            // End of the Code that goes into RzDb.CodeGenerations.tt 
+```
+To -> 
+```
+            // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
+
+            //new EdmxGenDemoGenerator(edmxFile, outputPath).ProcessTemplate();
+            new EdmxGenPropertyDumpGenerator(edmxFile, outputPath).ProcessTemplate();
+
+            // End of the Code that goes into RzDb.CodeGenerations.tt 
+```
+* Start debugging - it should stop in the template.  Stop debugging. 
+* Go to file EdmxGen.PropertyDump\EdmxGen.PropertyDumpTemplate.cshtml,  lets add a data type dump, go to line 11.. change it from
+```
+                -PropertyName: @item.Value.Name  @(item.Value.IsKey ? "Is Key!!" : "")  
+```
+To (which will dump sql data type, .net data type and max length) -> 
+```
+                -PropertyName: @item.Value.Name  @(item.Value.IsKey ? "Is Key!!" : "")  SQLDataType: @item.Value.Type   .NETDataType: @item.Value.Type.ToNetType()   Len: @item.Value.MaxLength
+```
+* Clear out the pevious break point if applicable,  start the app.  it should open explorer with the generated code.
+
+## Adding this to the build process
+
+The app contains a t4 template that is designed to load the assembly and execute the code generation.  This .tt template will be added to the same path as the data generation path,  so whenever the edmx file is generated,  it should kick off the code generation project. 
 
 ## Built With
 
