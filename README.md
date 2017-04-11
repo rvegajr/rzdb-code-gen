@@ -26,14 +26,14 @@ VS2017 Debugging Issue:  For some odd reason,  breakpoints do not stop in VS2017
 Open the app and start debugging.   The application, after it is completed, will open a file in explorer with the results of the code generation,
 
 ## Concepts
-
+```HTML
 Given that these are cshtml templates, they are paricularly sensitive to html tags.  To deal with this, the application uses a <t> tag to note when template text starts and ends. 
 It also uses the standard "@" and "{}" razor syntax to interpest code control statements.  
 * <t></t> - is used to deal with marking the beginning and ending of text (these will be removed on template rendering)
 * <t/> or <t /> are used as ways to seperate variables from text (useful for those situations where you have a variable name but no space by the template text, these will be removed on template rendering)
 * $OUTPUT_PATH$ - The Output that is passed to the template when .ProcessTemplate() is executed
 * ##FILE= - After code generation, the application will find this sequence of characters and parse the file based on this name. Since this happens after rendering, you can use schema objects the affect the name  
-
+```
 ## How to create your own template
 
 Lets create a template!
