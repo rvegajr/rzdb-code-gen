@@ -1,0 +1,16 @@
+﻿@using System.Collections.Generic
+@using RzDb.CodeGen
+@{ SchemaData _Model = (SchemaData)Model; }
+@foreach (string key in _Model.Entities.Keys)
+
+{<t>##FILE=$OUTPUT_PATH$Entity_@key<t/>.cs
+Key is @key @foreach (KeyValuePair<string, Property> item in _Model[key].Properties)
+{
+    <t>
+        -PropertyName: @item.Value.Name  @(item.Value.IsKey ? "Is Key!!" : "")
+        @foreach (Relationship relate in item.Value.RelatedTo)
+        {
+            <t>-   Relation:  @relate.FromFieldName  to @relate.ToTableName<t />.@relate.ToFieldName as @relate.Type</t>
+        }
+    </t>}
+</t>}

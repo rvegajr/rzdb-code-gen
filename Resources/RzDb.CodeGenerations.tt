@@ -1,0 +1,135 @@
+﻿<#@ template language="C#" debug="true" hostspecific="true"#>
+<#@ assembly name="$(SolutionDir)\Frameworks\Generators\CppeDb.Edmx.CodeGen\bin\CppeDb.Edmx.CodeGen.dll" #>
+<#@ import namespace="CppeDb.Edmx.CodeGen" #>
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="EnvDTE" #>
+<#@ import namespace="System.Runtime.InteropServices" #>  
+<#@ output extension=".txt"#>
+<#
+try {   
+	WriteLineToOutput("\nBegin Generating Code based off EDMX file");
+	var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
+	WriteLineToOutput("Solution Path is '" + solutionDir + "'");
+	
+	string inputFile = Host.ResolvePath(@"CppeDb.edmx");
+	WriteLineToOutput("Generating Code based off '" + inputFile + "'"); 
+
+	WriteLineToOutput("Generating Web API Controllers"); 
+	string webApiSourceOutput = solutionDir + @"CppeDb.WebApi\Controllers\Generated\";
+	WriteLineToOutput("   Output Path is '" + webApiSourceOutput + "'");
+	ClearDirectory(webApiSourceOutput);
+	new WebApiControllerGenerator(inputFile, webApiSourceOutput).ProcessTemplate();
+
+	WriteLineToOutput("Generating Unity Registrations"); 
+	string unityRegistratonsOutput = solutionDir + @"CppeDb.WebApi\App_Start\UnityConfigRegistrations.cs";
+	WriteLineToOutput("   Output Path is '" + unityRegistratonsOutput + "'");
+	new UnityRegistrationsGenerator(inputFile, unityRegistratonsOutput).ProcessTemplate(); 
+	 
+	WriteLineToOutput("Generating URF Services");   
+	string serviceSourceOutput = solutionDir + @"CppeDb.Service\Generated\";
+	WriteLineToOutput("   Output Path is '" + serviceSourceOutput + "'");
+	ClearDirectory(serviceSourceOutput);
+	new URFServiceGenerator(inputFile, serviceSourceOutput).ProcessTemplate(); 
+	 
+	WriteLineToOutput("Generating OData Registrations"); 
+	string odataRegistratonsOutput = solutionDir + @"CppeDb.WebApi\App_Start\ODataRegistrations.cs";
+	WriteLineToOutput("   Output Path is '" + odataRegistratonsOutput + "'");
+	new ODataRegistrationsGenerator(inputFile, odataRegistratonsOutput).ProcessTemplate(); 
+	 
+	WriteLineToOutput("Generating Ef6 Context");
+	string Ef6ContextRegistratonsOutput = solutionDir + @"CppeDb.DataAccess\Models\CppeDb.Context.cs";
+	WriteLineToOutput("   Output Path is '" + Ef6ContextRegistratonsOutput + "'");
+	new Ef6ContextGenerator(inputFile, Ef6ContextRegistratonsOutput).ProcessTemplate();
+
+	WriteLineToOutput("Generating Ef6 Models");  
+	string Ef6ModelsRegistratonsOutput = solutionDir + @"CppeDb.DataAccess\Models\Generated\";
+	WriteLineToOutput("   Output Path is '" + Ef6ModelsRegistratonsOutput + "'"); 
+	ClearDirectory(Ef6ModelsRegistratonsOutput);
+	new Ef6ModelsGenerator(inputFile, Ef6ModelsRegistratonsOutput).ProcessTemplate();
+
+	WriteLineToOutput("Generating UnitTests");  
+	string UnitTestsRegistratonsOutput = solutionDir + @"Tests\CppeDb.Tests\RouteTests\Generated\";
+	WriteLineToOutput("   Output Path is '" + UnitTestsRegistratonsOutput + "'"); 
+	ClearDirectory(UnitTestsRegistratonsOutput);
+	new UnitTestsGenerator(inputFile, UnitTestsRegistratonsOutput).ProcessTemplate();
+
+	//We don't want these files generated, and they keep on comming back when we refresh from schema.. this will delete them 
+	DeleteProjectFile(solutionDir + @"CppeDb.DataAccess\Models\CppeDb.tt");
+	DeleteProjectFile(solutionDir + @"CppeDb.DataAccess\Models\CppeDb.Context.tt");
+
+	//This will trigger a reload of the projects that have generated files. Thereare 
+	TriggerReloadOfProject(solutionDir + @"CppeDb.DataAccess\CppeDb.DataAccess.csproj"); 
+	TriggerReloadOfProject(solutionDir + @"CppeDb.WebAPI\CppeDb.WebAPI.csproj"); 
+	WriteLineToOutput("Code Generation has completed!");
+} catch (Exception ex) {
+	WriteLineToOutput("ERROR! " + ex.Message); 
+}
+#>
+
+<#+
+public void ClearDirectory(string path) {
+	try {
+		WriteLineToOutput("   Clearing path '" + path + "'");
+		Array.ForEach(System.IO.Directory.GetFiles(path), System.IO.File.Delete);
+		WriteLineToOutput("   ... path cleared");
+	} catch (Exception ex) {
+		WriteLineToOutput("   ... warning: not all files cleared");
+	}
+} 
+//Many thanks to http://stackoverflow.com/questions/26174672/log-to-output-window-when-using-t4
+public void WriteLineToOutput(string message) {
+	var hostServiceProvider = (IServiceProvider)this.Host;
+	var dte = (DTE)GetCOMService(hostServiceProvider, typeof(DTE));
+	var window = dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+	var outputWindow = (OutputWindow) window.Object;
+	outputWindow.ActivePane.Activate();
+	outputWindow.ActivePane.OutputString(message + "\n");
+}
+private object GetCOMService(IServiceProvider provider, Type type)
+{
+  object result = provider.GetService(type);
+  if (result == null)
+  {
+     return result;
+  }
+
+  try
+  {
+    return Marshal.GetObjectForIUnknown(Marshal.GetIUnknownForObject(result));
+  }
+  catch (Exception)
+  {
+    return result;
+  }
+}
+public void DeleteProjectFile(string fileName)
+{
+  try
+  {
+    IServiceProvider hostServiceProvider = (IServiceProvider)Host;
+    EnvDTE.DTE dte = (EnvDTE.DTE)hostServiceProvider.GetService(typeof(EnvDTE.DTE));
+    ProjectItem fileItem = dte.Solution.FindProjectItem(fileName);
+    if(fileItem == null) return;
+	WriteLineToOutput("Deleting Project File '" + fileName + "'");  
+    fileItem.Delete();
+	WriteLineToOutput("... its gone!  ignore the message comming up saying this file is missing ");  
+  }
+  catch (Exception)
+  {
+	WriteLineToOutput("... Could not delete project file :(");  
+  }
+}
+
+public void TriggerReloadOfProject(string projectFileName)
+{
+  try
+  {
+	WriteLineToOutput("Changing Last Write time for '" + projectFileName + "'");  
+	System.IO.File.SetLastWriteTime(projectFileName, DateTime.Now);
+  }
+  catch (Exception)
+  {
+	WriteLineToOutput("... Could not set Last Write Time for file :(");  
+  }
+}
+#>
