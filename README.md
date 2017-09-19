@@ -104,7 +104,6 @@ The app contains a t4 template that is designed to load the assembly and execute
 ## Built With
 
 * [RazorEngine](https://antaris.github.io/RazorEngine/) - Template engine that uses cshtml for code engine
-* [EntityFramework 6](https://www.nuget.org/packages/EntityFramework/) - Need the class libraries that reads edmx files
 
 ## Authors
 
@@ -113,3 +112,7 @@ The app contains a t4 template that is designed to load the assembly and execute
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Releases
+
+	Ricky Vega - 09/19/2017 - Removed edmx dependancy.  

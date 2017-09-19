@@ -201,10 +201,10 @@
     <Compile Include="Classes\SwaggerJsonUtilities.cs" />
     <Compile Include="Classes\XmlUtilities.cs" />
     <Compile Include="Console.cs" />
-    <Compile Include="EdmxGen.Demo\EdmxGenDemoGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Classes\SchemaObjects.cs" />
     <Compile Include="Classes\StringExtentions.cs" />
+    <Compile Include="RzDbGen.Demo\RzDbGenDemoGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\RzDb.CodeGenerations.txt">
@@ -213,7 +213,7 @@
       <DependentUpon>RzDb.CodeGenerations.tt</DependentUpon>
     </Content>
     <None Include="App.config" />
-    <None Include="EdmxGen.Demo\EdmxGenDemoTemplate.cshtml">
+    <None Include="RzDbGen.Demo\RzDbGenDemoTemplate.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="LICENSE" />

@@ -14,7 +14,7 @@ namespace RzDb.CodeGen
             // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
 
             string ConnectionString = ConfigurationManager.ConnectionStrings["RzDBEntities"].ConnectionString;
-            new EdmxGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
+            new RzDbGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
             // End of the Code that goes into RzDb.CodeGenerations.tt 
             Process.Start(outputPath);
         }
