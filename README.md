@@ -84,7 +84,7 @@ To ->
 ```
             // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
 
-            /.new RzDbGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
+            //new RzDbGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
             new RzDbGenPropertyDumpGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
 
             // End of the Code that goes into RzDb.CodeGenerations.tt 
