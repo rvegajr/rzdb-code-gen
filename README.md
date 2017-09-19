@@ -41,7 +41,7 @@ Lets create a template!
 * Create a new class in this newly created folder and call it "EdmxGen.PropertyDumpGenerator.cs",  paste the following code 
 ```
 using RzDb.CodeGen;
-public class EdmxGenPropertyDumpGenerator : EdmxCodeGenBase
+public class EdmxGenPropertyDumpGenerator : CodeGenBase
 {
     public EdmxGenPropertyDumpGenerator(string edmxPath, string outputPath) : base(edmxPath, @"EdmxGen.PropertyDump\EdmxGen.PropertyDumpTemplate.cshtml", outputPath)
     {

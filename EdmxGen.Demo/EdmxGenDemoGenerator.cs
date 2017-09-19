@@ -1,7 +1,7 @@
 ﻿using RzDb.CodeGen;
-public class EdmxGenDemoGenerator : EdmxCodeGenBase
+public class EdmxGenDemoGenerator : CodeGenBase
 {
-    public EdmxGenDemoGenerator(string edmxPath, string outputPath) : base(edmxPath, @"EdmxGen.Demo\EdmxGenDemoTemplate.cshtml", outputPath)
+    public EdmxGenDemoGenerator(string connectionString, string outputPath) : base(connectionString, @"EdmxGen.Demo\EdmxGenDemoTemplate.cshtml", outputPath)
     {
             
     }

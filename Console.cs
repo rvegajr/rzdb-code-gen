@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -8,13 +9,12 @@ namespace RzDb.CodeGen
     {
         static void Main(string[] args)
         {
-            var edmxFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase) + @"\Resources\AW.edmx";
             var outputPath = Path.GetTempPath() + "RzDbCodeGen\\";
             if (!Directory.Exists(outputPath)) Directory.CreateDirectory(outputPath);
             // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
 
-            new EdmxGenDemoGenerator(edmxFile, outputPath).ProcessTemplate();
-
+            string ConnectionString = ConfigurationManager.ConnectionStrings["RzDBEntities"].ConnectionString;
+            new EdmxGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
             // End of the Code that goes into RzDb.CodeGenerations.tt 
             Process.Start(outputPath);
         }

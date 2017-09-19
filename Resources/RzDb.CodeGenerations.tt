@@ -1,24 +1,38 @@
 ﻿<#@ template language="C#" debug="true" hostspecific="true"#>
 <#@ assembly name="$(SolutionDir)\Frameworks\Generators\RzDbCodeGen\bin\RzDb.CodeGen.dll" #>
 <#@ import namespace="RzDb.CodeGen" #>
+<#@ import namespace="CppeDb.Edmx.CodeGen" #>
 <#@ assembly name="EnvDTE" #>
-<#@ import namespace="EnvDTE" #>
-<#@ import namespace="System.Runtime.InteropServices" #>  
-<#@ output extension=".txt"#>
-<#
-try {   
-	WriteLineToOutput("\nBegin Generating Code based off EDMX file");
+<#@ import namespace="EnvDTE" #> 
+<#@ import namespace="System.Runtime.InteropServices" #> 
+<#@ output extension=".txt"#>  
+<#    
+try {  
+	string EntityName = "RzDbEntities";  //Note this trues to con
+    XmlUtilities xmlUtil = new XmlUtilities(); 
+
 	var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
-	WriteLineToOutput("Solution Path is '" + solutionDir + "'");
+	WriteLineToOutput("Solution Path is '" + solutionDir + "'");  
 	
-	string inputFile = Host.ResolvePath(@"Resources/AW.edmx");
-	WriteLineToOutput("Generating Code based off '" + inputFile + "'"); 
+	var serviceProvider = Host as IServiceProvider;
+	var dte = serviceProvider.GetService(typeof(DTE)) as DTE;
+	var configName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
+	var connectionString = "";
+	WriteLineToOutput("Config Name is " + configName);   
+	 
+	string UserWebApiConfigFileName = solutionDir + @"App." + configName + ".config";
+	string AppWebApiConfigFileName = solutionDir + @"App.config";
+	if (System.IO.File.Exists(UserWebApiConfigFileName)) {
+		WriteLineToOutput("Found User Config at " + UserWebApiConfigFileName);  
+		connectionString = xmlUtil.ExtractConnectionString(UserWebApiConfigFileName, EntityName);
+	} else {
+		WriteLineToOutput("Found User Config at " + AppWebApiConfigFileName);  
+		connectionString = xmlUtil.ExtractConnectionString(AppWebApiConfigFileName, EntityName);
+	}
 
-	new EdmxGenPropertyDumpGenerator(edmxFile, <OutputPath>).ProcessTemplate();
+	WriteLineToOutput("Connection string is " + connectionString);  
 
-	//We don't want these files generated, and they keep on comming back when we refresh from schema.. this will delete them 
-	DeleteProjectFile(solutionDir + @"<ProjectName>\Models\<EntityName>.tt");
-	DeleteProjectFile(solutionDir + @"<ProjectName>\Models\<EntityName>.Context.tt");
+	new EdmxGenPropertyDumpGenerator(connectionString, <OutputPath>).ProcessTemplate("EntityName");
 
 	//This will trigger a reload of the projects that have generated files.  Important if you need to reload the project if you add files
 	//TriggerReloadOfProject(solutionDir + @"<ProjectName>\<ProjectName>.csproj"); 

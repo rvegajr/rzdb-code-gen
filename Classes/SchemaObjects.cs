@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Text;
+using System.Threading.Tasks;
 namespace RzDb.CodeGen
 {
     public class Property
@@ -13,9 +14,18 @@ namespace RzDb.CodeGen
         public int Scale { get; set; }
         public bool IsNullable { get; set; }
         public bool IsKey { get; set; }
+        public int KeyOrder { get; set; }
         public bool IsIdentity { get; set; }
 
         public Relationships RelatedTo = new Relationships();
+    }
+
+    public static class TransformHelper
+    {
+        public static string[] AllowedKeys(SchemaData model)
+        {
+            return model.Keys.Where(k => !k.EndsWith("_Archive", StringComparison.OrdinalIgnoreCase)).ToArray();
+        }
     }
 
 
@@ -60,6 +70,7 @@ namespace RzDb.CodeGen
             else if (searchField == RelationSearchField.ToFieldName) return list.Count(r => r.ToFieldName == searchFor);
             else if (searchField == RelationSearchField.FromTableName) return list.Count(r => r.FromTableName == searchFor);
             else if (searchField == RelationSearchField.FromFieldName) return list.Count(r => r.FromFieldName == searchFor);
+            else if (searchField == RelationSearchField.FromColumnName) return list.Count(r => r.FromColumnName == searchFor);
             else return 0;
         }
     }
@@ -70,24 +81,182 @@ namespace RzDb.CodeGen
         , ToFieldName
         , FromTableName
         , FromFieldName
+        , FromColumnName
     }
     public class Relationship
     {
         public string Name { get; set; }
         public string FromTableName { get; set; }
         public string FromFieldName { get; set; }
+        public string FromColumnName { get; set; }
         public string ToTableName { get; set; }
         public string ToFieldName { get; set; }
         public string ToColumnName { get; set; }
         public string Type { get; set; }
     }
+
+    public class PrimaryKeyProperties : List<Property>
+    {
+        protected EntityType Entity;
+        public PrimaryKeyProperties(EntityType Parent)
+        {
+            this.Entity = Parent;
+        }
+        /// <summary>
+        /// Useful for rendering the primary keys for a comma delimited parameter list
+        /// Will return the primary keys in the following format
+        ///   [0]Parm1 (number), Parm2(text), Parm3 (number)
+        ///   will return
+        ///   int Parm1, string Parm2, int Parm3
+        /// </summary>
+        /// <param name="delimiter">Defaults to ","</param>
+        /// <param name="elementSet">Defaults to " "</param>
+        /// <returns></returns>
+        public string AsParmString(string prefix, string delimiter, string elementSet)
+        {
+            var ret = "";
+            for(int i = 0; i < this.Entity.PrimaryKeys.Count; i++)
+            {
+                var property = this.Entity.PrimaryKeys[i];
+                ret += (i > 0 ? delimiter + @" " : @" ") + prefix + property.Type.ToNetType() + elementSet + property.Name.ToSingular();
+            }
+            return ret;
+        }
+        /// <summary>
+        /// Useful for rendering the primary keys for a comma delimited parameter list
+        /// Will return the primary keys in the following format
+        ///   [0]Parm1 (number), Parm2(text), Parm3 (number)
+        ///   will return
+        ///   int Parm1, string Parm2, int Parm3
+        /// </summary>
+        public string AsParmString()
+        {
+            return this.AsParmString("[FromODataUri] ", ",", " ");
+        }
+
+        /// <summary>
+        /// Useful for rendering the primary keys for a linq search query
+        /// Will return the primary keys in the following format
+        ///   [0]Parm1 (number), Parm2(text), Parm3 (number)
+        ///   will return
+        ///   t.Parm1 == Parm1 and t.Parm2 == Parm2 and t.Parm3 == Parm3
+        /// </summary>
+        /// <param name="prefix">Defaults to "t"</param>
+        /// <param name="delimiter">Defaults to " and "</param>
+        /// <param name="elementSet">Defaults to " == "</param>
+        /// <returns></returns>
+        public string AsLinqEquationString(string prefix, string delimiter, string elementSet)
+        {
+            // t.@_Model[key].PrimaryKeys[0].Name == @key.ToSingular()
+            var ret = "";
+            for (int i = 0; i < this.Entity.PrimaryKeys.Count; i++)
+            {
+                var property = this.Entity.PrimaryKeys[i];
+                ret += (i > 0 ? delimiter + @" " : @" ") + prefix + (prefix.Length>0 ? "." : "") + property.Name + elementSet + property.Name.ToSingular();
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Useful for rendering the primary keys for a linq search query
+        /// Will return the primary keys in the following format
+        ///   [0]Parm1 (number), Parm2(text), Parm3 (number)
+        ///   will return
+        ///   t.Parm1 == Parm1 and t.Parm2 == Parm2 and t.Parm3 == Parm3
+        /// </summary>
+        /// <returns>t.Parm1 == Parm1 and t.Parm2 == Parm2 and t.Parm3 == Parm3</returns>
+        public string AsLinqEquationString()
+        {
+            return AsLinqEquationString("t", " &&", "==");
+        }
+
+        public string AsODataRouteString()
+        {
+            var ret = "";
+            if (this.Entity.PrimaryKeys.Count==0)
+            {
+                return "";
+            }
+            //To keep previous functionality,  if there is only 1 key,  it will only render the single parm name
+            else if (this.Entity.PrimaryKeys.Count == 1)
+            {
+                var property = this.Entity.PrimaryKeys[0];
+                ret = "{" + property.Name + "}";
+            } else
+            {
+                for (int i = 0; i < this.Entity.PrimaryKeys.Count; i++)
+                {
+                    var property = this.Entity.PrimaryKeys[i];
+                    ret += (i > 0 ? @", " : @" ") + property.Name + "={" + property.Name + "}";
+                }
+            }
+            return "(" + ret + ")";
+        }
+
+        /// <summary>
+        /// Useful for rendering the primary keys for a FindAsync
+        /// Will return the primary keys in the following format
+        ///   [0]Parm1 (number), Parm2(text), Parm3 (number)
+        ///   will return
+        ///   Parm1, Parm2, Parm3
+        /// </summary>
+        /// <param name="varPrefix">What the variable will be prefixed with.</param>
+        public string AsCsvString(string varPrefix)
+        {
+            var ret = "";
+            for (int i = 0; i < this.Entity.PrimaryKeys.Count; i++)
+            {
+                var property = this.Entity.PrimaryKeys[i];
+                ret += (i > 0 ? @", " : @" ") + ((varPrefix.Length > 0) ? varPrefix + "." : "") + property.Name;
+            }
+            return ret;
+        }
+        public string AsCsvString()
+        {
+            return this.AsCsvString("");
+        }
+
+        /// <summary>
+        /// Useful for rendering the keys for comparing if a request will be valid
+        /// Will return the primary keys in the following format
+        ///   [0]Parm1 (number), Parm2(text), Parm3 (number) with varPrefix=item
+        ///   will return
+        ///   (Parm1 == item.Parm1) && (Parm2 == item.Parm2) && (Parm3 == item.Parm3)
+        /// </summary>
+        /// <param name="varPrefix">What the variable will be prefixed with.</param>
+        public string AsParmBooleanCheck(string varPrefix)
+        {
+            var ret = "";
+            for (int i = 0; i < this.Entity.PrimaryKeys.Count; i++)
+            {
+                var property = this.Entity.PrimaryKeys[i];
+                ret += (i > 0 ? @" && " : @"") + property.Name + " == " + varPrefix + "." + property.Name;
+            }
+            return ret;
+        }
+
+
+    }
     public class EntityType
     {
+        public EntityType()
+        {
+            this.PrimaryKeys = new PrimaryKeyProperties(this);
+        }
         public string Name { get; set; }
+        public string Schema { get; set; }
+        public string Type { get; set; }
+        public string TemporalType { get; set; }
         public Dictionary<string, Property> Properties = new Dictionary<string, Property>();
         public Relationships Relationships = new Relationships();
-        public List<Property> PrimaryKeys = new List<Property>();
-
+        public PrimaryKeyProperties PrimaryKeys;
+        public bool IsTemporalView { get; set; }
+        public bool HasPrimaryKeys()
+        {
+            foreach (var prop in Properties.Values)
+                if (prop.IsKey) return true;
+            return false;
+        }
     }
 
     public class SchemaData
@@ -106,11 +275,18 @@ namespace RzDb.CodeGen
         }
         public Dictionary<string, EntityType>.KeyCollection Keys
         {
-            get { return _entities.Keys; }
+            get
+            {
+                return _entities.Keys;
+            }
         }
 
         public void Add(string entityName, EntityType entity)
         {
+            if (_entities.ContainsKey(entityName))
+            {
+                _entities.Remove(entityName);
+            }
             _entities.Add(entityName, entity);
         }
 
@@ -199,7 +375,7 @@ namespace RzDb.CodeGen
         public static string NextLongText(this Random rnd, int maxlength)
         {
             var s = Faker.Lorem.Paragraph(rnd.Next(2, 99));
-            if (maxlength > s.Length) maxlength = s.Length - 1;
+            if (maxlength > s.Length) maxlength = s.Length-1;
             return s.Substring(0, maxlength);
         }
 
@@ -422,7 +598,6 @@ namespace RzDb.CodeGen
                     return "DT_I1";
                 case "real":
                     return "DT_R4";
-
 
                 case "varbinary":
                     return "";
