@@ -15,6 +15,7 @@ namespace RzDb.CodeGen
 
             string ConnectionString = ConfigurationManager.ConnectionStrings["RzDBEntities"].ConnectionString;
             new RzDbGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
+			
             // End of the Code that goes into RzDb.CodeGenerations.tt 
             Process.Start(outputPath);
         }

@@ -12,6 +12,10 @@ This project addresses, what I consider, a major shortcomming of T4 templates.  
 This project attempts to solve this by reading the edmx file generated from an ADO.NET Entity object and create a simple representation of the schema.  It then passes 
 this simplified representation of the schema to a cshtml template for code generation.   
 
+## Releases
+
+	Ricky Vega - 09/19/2017 - Removed edmx dependancy.  Updated RazorEngine now supports template debugging in 2017 :)
+	
 ## Getting Started
 
 Simply clone the respository https://github.com/rvegajr/rzdb-code-gen and run the application.  
@@ -19,7 +23,6 @@ Simply clone the respository https://github.com/rvegajr/rzdb-code-gen and run th
 ### Prerequisites
 
 You will need Visual Studio 2015+ (Community Edition will be fine).  
-VS2017 Debugging Issue:  For some odd reason,  breakpoints do not stop in VS2017,  but it debugs fine on 2015.  Templates are still generated as expected,  we just can't step through the cshtml.
 
 ### Installing
 
@@ -37,19 +40,19 @@ It also uses the standard "@" and "{}" razor syntax to interpest code control st
 ## How to create your own template
 
 Lets create a template!
-* In the solution explorer, select the project 'RzDbCodeGen' and create a folder off the project root called "EdmxGen.PropertyDump"
-* Create a new class in this newly created folder and call it "EdmxGen.PropertyDumpGenerator.cs",  paste the following code 
+* In the solution explorer, select the project 'RzDbCodeGen' and create a folder off the project root called "RzDbGen.PropertyDump"
+* Create a new class in this newly created folder and call it "RzDbGen.PropertyDumpGenerator.cs",  paste the following code 
 ```
 using RzDb.CodeGen;
-public class EdmxGenPropertyDumpGenerator : CodeGenBase
+public class RzDbGenPropertyDumpGenerator : CodeGenBase
 {
-    public EdmxGenPropertyDumpGenerator(string edmxPath, string outputPath) : base(edmxPath, @"EdmxGen.PropertyDump\EdmxGen.PropertyDumpTemplate.cshtml", outputPath)
+    public RzDbGenPropertyDumpGenerator(string edmxPath, string outputPath) : base(edmxPath, @"RzDbGen.PropertyDump\RzDbGen.PropertyDumpTemplate.cshtml", outputPath)
     {
 
     }
 }
 ```
-* Create another new class in this newly created folder and call it "EdmxGen.PropertyDumpTemplate.cshtml",  paste the following code 
+* Create another new class in this newly created folder and call it "RzDbGen.PropertyDumpTemplate.cshtml",  paste the following code 
 ```
 @using System.Collections.Generic
 @using RzDb.CodeGen
@@ -68,12 +71,12 @@ Key is @key @foreach (KeyValuePair<string, Property> item in _Model[key].Propert
     </t>}
 </t>}
 ```
-* VS2015 ONLY - set a breakpoint in line 4 in EdmxGen.PropertyDumpTemplate.cshtml  (skip all breakpoint steps if you are using VS2017)
+* Set a breakpoint in line 4 in RzDbGen.PropertyDumpTemplate.cshtml 
 * Go To <App Root>Console.cs,  edit line 16 and comment it out
 ```
             // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
 
-            new EdmxGenDemoGenerator(edmxFile, outputPath).ProcessTemplate();
+            new RzDbGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
 
             // End of the Code that goes into RzDb.CodeGenerations.tt 
 ```
@@ -81,8 +84,8 @@ To ->
 ```
             // Code that goes into RzDb.CodeGenerations.tt file starts here --- 
 
-            //new EdmxGenDemoGenerator(edmxFile, outputPath).ProcessTemplate();
-            new EdmxGenPropertyDumpGenerator(edmxFile, outputPath).ProcessTemplate();
+            /.new RzDbGenDemoGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
+            new RzDbGenPropertyDumpGenerator(ConnectionString, outputPath).ProcessTemplate("RzDbEntities");
 
             // End of the Code that goes into RzDb.CodeGenerations.tt 
 ```
@@ -99,7 +102,9 @@ To (which will dump sql data type, .net data type and max length) ->
 
 ## Adding this to the build process
 
-The app contains a t4 template that is designed to load the assembly and execute the code generation.  This .tt template will be added to the same path as the data generation path,  so whenever the edmx file is generated,  it should kick off the code generation project. Note that you will need to set the Project Type to "Class Library" instead of console app when you include it in your host project.
+The app contains a t4 template that is designed to load the assembly and execute the code generation.  
+Kick off the code generation project by adding a space in the .tt template and pressing Ctl+S (or Save).
+Note that you will need to set the Project Type to "Class Library" instead of console app when you include it in your host project.
 
 ## Built With
 
@@ -113,6 +118,3 @@ The app contains a t4 template that is designed to load the assembly and execute
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
-## Releases
-
-	Ricky Vega - 09/19/2017 - Removed edmx dependancy.  
