@@ -358,9 +358,10 @@ select
 , KP.TABLE_NAME EntityTable
 , KP.COLUMN_NAME EntityColumn
 , KP.TABLE_SCHEMA + '.' + KP.TABLE_NAME + '.' + KP.COLUMN_NAME AS EntityFullColumnName
+, KF.TABLE_SCHEMA RelatedSchema
 , KF.TABLE_NAME RelatedTable
 , KF.COLUMN_NAME RelatedColumn
-, KP.TABLE_SCHEMA + '.' + KF.TABLE_NAME + '.' + KF.COLUMN_NAME AS RelatedFullColumnName
+, KF.TABLE_SCHEMA + '.' + KF.TABLE_NAME + '.' + KF.COLUMN_NAME AS RelatedFullColumnName
 , RC.MATCH_OPTION MatchOption
 , RC.CONSTRAINT_NAME FK_Name
 , RC.UPDATE_RULE UpdateRule
@@ -420,7 +421,7 @@ FROM
 	LEFT OUTER JOIN #IDX relatedidx
 		ON relatedidx.FULL_COLUMN_NAME = relatedcol.FULL_COLUMN_NAME
 ORDER BY
-	EntitySchema, EntityTable, EntityColumn, RelatedTable, RelatedColumn
+	EntitySchema, EntityTable, EntityColumn, RelatedSchema, RelatedTable, RelatedColumn
 ;
 
 
@@ -434,6 +435,7 @@ SELECT f.EntitySchema AS SCHEMANAME, f.EntityTable AS TABLENAME,
 	, f.EntitySchema 
 	, f.EntityTable
 	, f.EntityColumn
+	, f.RelatedSchema 
 	, f.RelatedTable
 	, f.RelatedColumn
 	, f.EntityFullColumnName
@@ -445,9 +447,10 @@ FROM
 UNION
 SELECT frel.EntitySchema AS SCHEMANAME, frel.RelatedTable AS TABLENAME,
 	frel.FK_Name
-	, frel.EntitySchema 
+	, frel.RelatedSchema
 	, frel.RelatedTable
 	, frel.RelatedColumn
+	, frel.EntitySchema 
 	, frel.EntityTable
 	, frel.EntityColumn
 	, frel.RelatedFullColumnName
@@ -462,7 +465,7 @@ WHERE
  NOT (	e.EntityTable = e.RelatedTable AND e.EntityColumn = e.RelatedColumn)
  
 ORDER BY
-	EntitySchema, EntityTable, RelationGroupSort, EntityColumn, RelatedTable, RelatedColumn
+	EntitySchema, EntityTable, RelationGroupSort, EntityColumn, RelatedSchema, RelatedTable, RelatedColumn
 
 DROP TABLE #IDX;
 DROP TABLE #COL;
